@@ -1,39 +1,44 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import Cardlist from "../components/Cardlist";
 import Searchbox from "../components/Searchbox";
 import Scroll from "../components/Scroll";
 import "./App.css";
 import ErrorBound from "../components/ErrorBound";
+import { requestRobots, setSearchField } from "../Action";
+
+const mapStateToProps = (state) => {
+  return {
+    searchfield: state.searchrobofriends.searchfield,
+    robots: state.requestRobots.robots,
+    isPending: state.requestRobots.isPending,
+    error: state.requestRobots.error,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onSearchChange: (event) => dispatch(setSearchField(event.target.value)),
+    onRequestRobots: () => dispatch(requestRobots()),
+  };
+};
 
 class App extends Component {
-  constructor() {
-    super();
-    this.state = {
-      robots: [],
-      searchfield: "",
-    };
-  }
-
   componentDidMount() {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((response) => response.json())
-      .then((users) => this.setState({ robots: users }));
+    this.props.onRequestRobots();
   }
 
-  onSearchChange = (event) => {
-    this.setState({ searchfield: event.target.value });
-  };
   render() {
-    const { robots, searchfield } = this.state;
+    const { searchfield, onSearchChange, robots, isPending } = this.props;
     const filterR = robots.filter((robot) => {
       return robot.name.toLowerCase().includes(searchfield.toLowerCase());
     });
-    return !robots.length ? (
+
+    return isPending ? (
       <h1> LOADING</h1>
     ) : (
       <div className="tc">
         <h1 className="f1">RoboFriends</h1>
-        <Searchbox searchChange={this.onSearchChange} />
+        <Searchbox searchChange={onSearchChange} />
         <Scroll>
           <ErrorBound>
             <Cardlist robots={filterR} />
@@ -44,4 +49,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default connect(mapStateToProps, mapDispatchToProps)(App);
